@@ -1,0 +1,33 @@
+{
+  "01_download.py": {
+    "total_lines": 70,
+    "pages": [
+      "01_download_py_p1.png",
+      "01_download_py_p2.png"
+    ]
+  },
+  "02_extract.py": {
+    "total_lines": 63,
+    "pages": [
+      "02_extract_py_p1.png",
+      "02_extract_py_p2.png"
+    ]
+  },
+  "03_analyze.py": {
+    "total_lines": 514,
+    "pages": [
+      "03_analyze_py_p1.png",
+      "03_analyze_py_p2.png",
+      "03_analyze_py_p3.png",
+      "03_analyze_py_p4.png",
+      "03_analyze_py_p5.png",
+      "03_analyze_py_p6.png",
+      "03_analyze_py_p7.png",
+      "03_analyze_py_p8.png",
+      "03_analyze_py_p9.png",
+      "03_analyze_py_p10.png",
+      "03_analyze_py_p11.png",
+      "03_analyze_py_p12.png"
+    ]
+  }
+}

@@ -73,6 +73,8 @@ pdflatex main.tex && pdflatex main.tex
 | Plan vs Speech (Logistic Regression)   | accuracy / F₁ (5-CV)  | 0.820 / 0.798        |
 | Year prediction (GP, Matérn-5/2)       | MAE / R² (5-CV)       | **3.48 yr** / **0.353** |
 | Year prediction (Ridge)                | MAE / R² (5-CV)       | 3.70 yr / 0.324      |
+| Era (year thresholded @2015, GP RBF)   | accuracy / F₁ (5-CV)  | 0.728 / 0.716        |
+| Era (year thresholded @2015, Logistic) | accuracy / F₁ (5-CV)  | 0.745 / 0.736        |
 
 ## Data sources
 
