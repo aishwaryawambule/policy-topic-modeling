@@ -77,6 +77,22 @@ def label_to_year(label: str) -> int:
     return int(m.group(0)) if m else 0
 
 
+# The brief requires a Gaussian Process *classification* in which a threshold is
+# defined on the (continuous) output variable to create classes, and the GP is
+# then trained on that categorised output. The continuous output here is the
+# document year; we threshold it at 2015, the year Nepal promulgated its federal
+# constitution, splitting the corpus into a pre-federal and a federal era.
+FEDERAL_THRESHOLD_YEAR = 2015
+
+
+def year_to_era(year: int) -> int:
+    """Threshold the continuous year output into a binary era class.
+
+    0 = pre-federal (year <= 2015), 1 = federal (year > 2015).
+    """
+    return int(year > FEDERAL_THRESHOLD_YEAR)
+
+
 def load_corpus() -> pd.DataFrame:
     rows = []
     for category, folder in (("plan", DATA / "plans"), ("speech", DATA / "speeches")):
@@ -334,7 +350,7 @@ def plot_tsne(theta, y_cat, path):
     plt.close()
 
 
-def plot_confusion(cm, path, labels=("Plan", "Speech")):
+def plot_confusion(cm, path, labels=("Plan", "Speech"), title="GP classifier"):
     plt.figure(figsize=(3.4, 2.8))
     sns.heatmap(
         cm, annot=True, fmt="d", cmap="Blues",
@@ -342,7 +358,7 @@ def plot_confusion(cm, path, labels=("Plan", "Speech")):
     )
     plt.xlabel("Predicted")
     plt.ylabel("True")
-    plt.title("GP classifier")
+    plt.title(title)
     plt.tight_layout()
     plt.savefig(path, dpi=200)
     plt.close()
@@ -434,6 +450,17 @@ def main() -> int:
     print(f"    GP   MAE = {gpr['cv_mae_mean']:.2f} yr, R^2 = {gpr['cv_r2_mean']:.3f}")
     print(f"    Ridge MAE= {base_reg['cv_mae_mean']:.2f} yr, R^2 = {base_reg['cv_r2_mean']:.3f}")
 
+    print("[5b] Thresholding continuous output (year) -> era classes; GP classification...")
+    era = np.array([year_to_era(int(y)) for y in years])
+    n_pre, n_post = int((era == 0).sum()), int((era == 1).sum())
+    gpc_era = gp_classify(theta, era)
+    base_era = baseline_classify(theta, era)
+    print(f"    threshold = {FEDERAL_THRESHOLD_YEAR}; pre-federal={n_pre}, federal={n_post}")
+    print(f"    GP   acc = {gpc_era['cv_acc_mean']:.3f} ± {gpc_era['cv_acc_std']:.3f}, "
+          f"F1 = {gpc_era['cv_f1_mean']:.3f}")
+    print(f"    LR   acc = {base_era['cv_acc_mean']:.3f} ± {base_era['cv_acc_std']:.3f}, "
+          f"F1 = {base_era['cv_f1_mean']:.3f}")
+
     metrics = {
         "perplexity": perp_rows,
         "chosen_k": chosen_k,
@@ -441,6 +468,14 @@ def main() -> int:
         "baseline_classifier_lr": base,
         "gp_regressor_year": {k: v for k, v in gpr.items() if k not in ("pred_mean", "pred_std")},
         "baseline_regressor_ridge": base_reg,
+        "era_classification": {
+            "threshold_year": FEDERAL_THRESHOLD_YEAR,
+            "class_labels": ["pre-federal (<=2015)", "federal (>2015)"],
+            "n_pre": n_pre,
+            "n_post": n_post,
+            "gp": {k: v for k, v in gpc_era.items() if k != "model"},
+            "baseline_lr": base_era,
+        },
         "topic_top_words": topics,
         "corpus_summary": {
             "n_chunks": int(len(corpus)),
@@ -463,7 +498,10 @@ def main() -> int:
     plot_topic_by_category(corpus, theta, FIG / "fig_topic_category.png")
     plot_topics_over_time(corpus, theta, FIG / "fig_topics_over_time.png")
     plot_tsne(theta, y_cat, FIG / "fig_tsne.png")
-    plot_confusion(np.array(gpc["confusion"]), FIG / "fig_confusion.png")
+    plot_confusion(np.array(gpc["confusion"]), FIG / "fig_confusion.png",
+                   labels=("Plan", "Speech"), title="GP classifier: genre")
+    plot_confusion(np.array(gpc_era["confusion"]), FIG / "fig_confusion_era.png",
+                   labels=("Pre-2015", "Federal"), title="GP classifier: era (thresholded year)")
     plot_gpr(years, gpr["pred_mean"], gpr["pred_std"], FIG / "fig_gpr_year.png")
     plot_wordcloud(corpus, theta, lda, vec, FIG / "fig_wordclouds.png")
     print(f"    figures written to {FIG}")

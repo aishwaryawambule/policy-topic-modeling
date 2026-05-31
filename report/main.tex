@@ -20,8 +20,22 @@
 \usepackage{url}
 \usepackage{caption}
 \usepackage{hyperref}
+\usepackage{listings}
 
 \graphicspath{{../figures/}{./figures/}{./}}
+
+% Listing style for the code appendix (Python).
+\lstdefinestyle{pycode}{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue!60!black},
+  commentstyle=\color{green!45!black}\itshape,
+  stringstyle=\color{red!55!black},
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=5pt,
+  showstringspaces=false, breaklines=true, breakatwhitespace=false,
+  frame=single, rulecolor=\color{gray!40}, tabsize=4,
+  columns=fullflexible, keepspaces=true, upquote=true,
+}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -63,7 +77,12 @@ five-fold cross-validated accuracy, exceeding a logistic-regression
 baseline by roughly nine accuracy points.  A GP regressor with a
 Mat\'ern-2.5 kernel further predicts the year of authorship to within
 3.48 years on average ($R^{2}=0.353$), exposing measurable thematic
-drift over the federal-transition period.  The study illustrates how
+drift over the federal-transition period.  Thresholding this
+continuous year output at the 2015 constitutional transition yields a
+binary era label on which the GP classifier reaches
+$72.8\%\pm6.2\%$ accuracy -- statistically level with a logistic
+baseline -- confirming that the drift is real but gradual rather than
+abrupt.  The study illustrates how
 unsupervised text mining and probabilistic supervised models can be
 combined to quantify policy continuity and change in a
 low-resource governance setting, and it releases a reproducible
@@ -109,44 +128,31 @@ We answer the first question with Latent Dirichlet Allocation
 (LDA)~\cite{blei2003latent}, the second with a Gaussian Process (GP)
 classifier~\cite{rasmussen2006gaussian} on the per-document topic
 distributions, and the third with a GP regressor whose kernel encodes
-smoothness assumptions appropriate for a slowly evolving discourse.
-Section~\ref{sec:related} situates the work in the topic-modelling and
-GP literature, Section~\ref{sec:data} describes the corpus and its
-provenance, Section~\ref{sec:methods} formalises the methods,
-Section~\ref{sec:setup} reports the experimental setup,
-Section~\ref{sec:results} presents the empirical findings,
-Section~\ref{sec:ethics} discusses social and ethical considerations,
-and Section~\ref{sec:discussion} concludes.
+smoothness assumptions appropriate for a slowly evolving discourse; a
+fourth experiment thresholds the regression target into eras and
+classifies them, directly addressing the temporal question as a
+decision problem.
 
 % --------------------------------------------------------------------
 \section{Related Work}\label{sec:related}
-Topic modelling has been widely applied to legislative and budgetary
-text.  Quinn~\textit{et al.}~\cite{quinn2010} use a dynamic topic model
-to track U.S.\ Senate attention over fifty years; Grimmer and
-Stewart~\cite{grimmer2013text} survey the broader field; Lucas
-\textit{et al.}~\cite{lucas2015computer} extend the methodology to
-multilingual political corpora.  In the development-policy domain,
-work on World Bank project narratives~\cite{moretti2015} and on Indian
-five-year plans has shown that latent themes can be tracked
-through time even when the underlying document genre is highly
-formulaic.
+Topic modelling is widely applied to legislative and budgetary text.
+Quinn~\textit{et al.}~\cite{quinn2010} track U.S.\ Senate attention
+with a dynamic topic model; Grimmer and Stewart~\cite{grimmer2013text}
+survey the field; Lucas~\textit{et al.}~\cite{lucas2015computer}
+extend it to multilingual political corpora; and work on World Bank
+narratives~\cite{moretti2015} shows latent themes can be tracked
+through time even in highly formulaic genres.  For Nepal the
+quantitative literature is sparse and largely hand-coded; to our
+knowledge no study has combined LDA with a Gaussian Process layer on
+the periodic-plan/budget-speech corpus.
 
-For Nepal specifically, the literature is sparse.  Existing
-quantitative work has focused either on macroeconomic outcomes
-implied by the plans or on hand-coded sectoral content analyses.  To
-our knowledge no published study has combined LDA with a Gaussian
-Process discriminative layer on the Nepali periodic-plan/budget-speech
-corpus.
-
-Gaussian Process classification and regression remain attractive in
-this regime because (i) the input dimensionality after LDA is small
-(eight topics), (ii) the number of training units is modest (a few
-hundred chunks), and (iii) the posterior gives calibrated uncertainty
-in addition to a point prediction~\cite{rasmussen2006gaussian,williams1998bayesian}.
-The standard squared-exponential (RBF) and Mat\'ern kernels provide
-contrasting smoothness priors that are particularly useful when, as
-here, the analyst has weak prior beliefs about the geometry of the
-feature space~\cite{stein1999interpolation}.
+GPs suit this regime: the post-LDA input is low-dimensional (eight
+topics), the training set is modest (a few hundred chunks), and the
+posterior gives calibrated uncertainty alongside a point
+prediction~\cite{rasmussen2006gaussian,williams1998bayesian}.  RBF and
+Mat\'ern kernels supply contrasting smoothness priors, useful when
+prior beliefs about the feature geometry are
+weak~\cite{stein1999interpolation}.
 
 % --------------------------------------------------------------------
 \section{Problem and Data Set}\label{sec:data}
@@ -154,10 +160,11 @@ feature space~\cite{stein1999interpolation}.
 \subsection{Documents collected}
 Three Periodic Plans (Eleventh Three-Year Interim Plan 2007/08--2009/10,
 Thirteenth Plan 2013/14--2015/16, and Fifteenth Plan
-2019/20--2023/24) were downloaded in their official English versions
+2019/20--2023/24~\cite{npc15}) were downloaded in their official English versions
 from the National Planning Commission and from public mirrors
 maintained by ICIMOD, the Asian Development Bank, and FAOLEX.  Eight
-budget speeches covering fiscal years 2008/09 through 2024/25 were
+budget speeches covering fiscal years 2008/09 through
+2024/25~\cite{mof2024} were
 downloaded from the Ministry of Finance archive
 (\texttt{mof.gov.np}) and verified against alternative mirrors when
 the primary link returned an HTTP error.  Table~\ref{tab:corpus}
@@ -188,13 +195,12 @@ Budget Speech FY2024/25      & 2024 &  17{,}441 \\ \midrule
 \end{table}
 
 \subsection{Why these documents matter}
-The chosen window straddles three regimes that should, in principle,
-leave detectable thematic fingerprints: the post-conflict transitional
-government (2007--2014), the promulgation of the 2015 Constitution
-and the move to federalism (2015--2017), and the consolidation phase
-under federal Province governments (2018--2024).  An empirical method
-that can or cannot pick these regimes apart from the documents'
-internal language is therefore informative regardless of outcome.
+The window straddles three regimes that should leave thematic
+fingerprints: the post-conflict transitional government (2007--2014),
+the 2015 Constitution and move to federalism (2015--2017), and
+consolidation under Province governments (2018--2024).  Whether a
+method can separate these regimes from internal language alone is
+therefore informative either way.
 
 \subsection{Pre-processing}
 The documents are PDFs, so we use \texttt{pypdf} to extract raw
@@ -257,6 +263,19 @@ k_{\nu=5/2}(x,x') \;=\;
 \end{equation}
 with $r=\|x-x'\|$, again coupled with an explicit white-noise term.
 
+\subsection{Thresholded-output GP classification}
+The brief asks specifically for a GP classifier trained on a class
+variable obtained by \emph{thresholding} a continuous output.  We use
+the document year for this purpose: applying the threshold
+$\tau=2015$ -- the year Nepal promulgated its federal constitution --
+maps every chunk to a binary era label
+$e_d=\mathbb{1}[\text{year}_d>\tau]$ (pre-federal vs.\ federal).  The
+same RBF-plus-noise kernel and optimisation procedure as the genre
+classifier are then applied to $(\Theta, e)$.  Unlike the genre label,
+the era label is \emph{derived} from a continuous quantity, so this
+experiment tests whether the topic mixtures encode a sharp regime
+boundary or only a gradual drift.
+
 \subsection{Baselines and evaluation}
 For classification we compare against $\ell_{2}$-regularised
 logistic regression; for regression we compare against ridge
@@ -267,23 +286,17 @@ regressor.  We report accuracy, macro-$F_{1}$, mean absolute error
 
 % --------------------------------------------------------------------
 \section{Experimental Setup}\label{sec:setup}
-The end-to-end pipeline is implemented in Python~3.12 with
-\texttt{scikit-learn}~1.8, \texttt{numpy}, \texttt{pandas},
-\texttt{matplotlib}, \texttt{seaborn}, \texttt{nltk},
-\texttt{wordcloud} and \texttt{pypdf}, managed through the
-\texttt{uv} package manager.  All experiments were run on a
-\mbox{macOS} workstation with an Apple Silicon CPU; total wall-clock
-time, including downloads, is under four minutes.  Random seeds are
-fixed at $42$ throughout.
+The pipeline is implemented in Python~3.12 using
+\texttt{scikit-learn}~1.8~\cite{pedregosa2011}, \texttt{nltk},
+\texttt{pypdf} and the usual scientific stack, managed with \texttt{uv}; a full run completes in
+under four minutes on an Apple Silicon CPU, with all random seeds
+fixed at $42$.
 
-To select the number of topics $K$, we sweep
-$K\!\in\!\{4,6,8,10,12\}$ and record the held-out perplexity reported
-by the LDA implementation.  As Fig.~\ref{fig:perp} shows, perplexity
-declines monotonically.  We therefore choose $K\!=\!8$ as a
-compromise between predictive accuracy and human interpretability;
-beyond eight topics, additional components either fragment existing
-themes or attach to publication boilerplate that survived the
-stopword pass.
+To choose the number of topics we sweep $K\!\in\!\{4,6,8,10,12\}$ and
+record held-out perplexity.  Perplexity falls monotonically
+(Fig.~\ref{fig:perp}), so we select $K\!=\!8$ as a compromise between
+fit and interpretability; beyond eight, components fragment existing
+themes or attach to surviving boilerplate.
 
 \begin{figure}[t]
 \centering
@@ -298,35 +311,16 @@ $K\!=\!8$ is chosen for interpretability.}
 \section{Results}\label{sec:results}
 
 \subsection{Discovered topics}
-Table~\ref{tab:topics} lists the ten highest-probability terms for
-each of the eight topics, and Fig.~\ref{fig:wordcloud} shows
-corresponding word-clouds.  The themes are crisply recognisable to a
-reader familiar with Nepali planning discourse:
-
-\begin{itemize}
-\item \textbf{T1 -- Fiscal accounts.}  Revenue handles, grants,
-      capital and recurrent loans -- the bookkeeping vocabulary of the
-      Ministry of Finance.
-\item \textbf{T2 -- Macroeconomy.}  Economic growth, investment,
-      employment and rates -- the language used to motivate sectoral
-      reform.
-\item \textbf{T3 -- Trade, energy and provinces.}  Tourism, exports,
-      industrial supply and provincial industry, reflecting the
-      post-federal industrial agenda.
-\item \textbf{T4 -- Infrastructure.}  Roads, bridges, electricity
-      transmission, drinking water; consistently the largest single
-      capital-spending category.
-\item \textbf{T5 -- Human development.}  Health, education, women,
-      children, citizens' rights -- the social spending block.
-\item \textbf{T6 -- Implementation and governance.}  Monitoring,
-      evaluation, agencies, institutional reform.
-\item \textbf{T7 -- Agriculture and land.}  Irrigation, forests,
-      cooperatives, food production.
-\item \textbf{T8 -- Federal financial structure.}  Recurrent and
-      capital splits, Federal Affairs, the Office of the
-      Auditor-General -- a topic that, as we show below, barely
-      existed before 2015.
-\end{itemize}
+Table~\ref{tab:topics} lists the eight highest-probability terms for
+each topic and Fig.~\ref{fig:wordcloud} shows the corresponding
+word-clouds.  The themes are readily recognisable to a reader of
+Nepali planning discourse: T1 fiscal accounts, T2 macroeconomy, T3
+trade/energy/provinces, T4 infrastructure, T5 human development, T6
+implementation and governance, T7 agriculture and land, and T8 the
+federal financial structure (recurrent/capital splits, Federal
+Affairs, the Auditor-General).  T8 is the most diagnostic: as
+Section~\ref{sec:results} shows, it barely existed before the 2015
+federal transition.
 
 \begin{table*}[t]
 \caption{Top eight words for each LDA topic ($K=8$).}
@@ -357,14 +351,13 @@ higher probability within the topic.}
 \end{figure}
 
 \subsection{Plans versus budget speeches}
-Fig.~\ref{fig:topic-cat} contrasts the average topic probability for
-Plan chunks and Speech chunks.  Plans are dominated by T2
-(macroeconomy), T5 (human development), T6 (governance) and T7
-(agriculture); Budget Speeches are dominated by T1 (fiscal accounts),
-T4 (infrastructure) and T8 (federal finance).  This is precisely the
-division of labour one would expect: Plans articulate medium-term
-strategy in broad sectoral language, while Speeches articulate
-fiscal-year allocations in line-item language.
+Fig.~\ref{fig:topic-cat} contrasts mean topic probability by genre.
+Plans are dominated by T2 (macroeconomy), T5 (human development), T6
+(governance) and T7 (agriculture); Speeches by T1 (fiscal accounts),
+T4 (infrastructure) and T8 (federal finance) -- exactly the expected
+division of labour, with Plans setting medium-term strategy in
+sectoral language and Speeches announcing fiscal-year allocations in
+line-item language.
 
 \begin{figure}[t]
 \centering
@@ -469,41 +462,66 @@ features.  Shaded band is $\pm1\sigma$ posterior uncertainty.}
 \label{fig:gpr}
 \end{figure}
 
+\subsection{Thresholding the year into eras}
+Thresholding the continuous year at $\tau=2015$ splits the corpus into
+157 pre-federal and 188 federal chunks and turns the dating problem
+into a binary GP classification (Section~\ref{sec:methods}).  Here the
+GP reaches $0.728 \pm 0.062$ accuracy and $0.716$ macro-$F_{1}$, while
+logistic regression reaches $0.745 \pm 0.065$ and $0.736$
+(Table~\ref{tab:era}).  Both clear the $0.545$ majority-class floor
+comfortably, but their confidence intervals overlap almost entirely,
+so on this task the GP offers \emph{no} advantage over the linear
+model.  The confusion matrix (Fig.~\ref{fig:conf-era}) shows most
+errors are pre-2015 chunks read as federal: macroeconomic and
+human-development language is largely time-invariant, so only the
+fiscal-structure vocabulary (T8) carries a clean date stamp.  This is
+the expected counterpart to the modest regression $R^{2}$: the
+2015 transition is visible in the topics but diffuse, not a step
+change, which is exactly why a flexible non-linear boundary buys
+nothing here.
+
+\begin{table}[t]
+\caption{Era classification from thresholded year, $\tau=2015$ (5-fold CV).}
+\label{tab:era}
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Model              & Accuracy            & Macro $F_{1}$       \\ \midrule
+Majority class     & $0.545$             & ---                 \\
+GP (RBF)           & $0.728 \pm 0.062$   & $0.716$             \\
+Logistic Regression& $0.745 \pm 0.065$   & $0.736$             \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.7\columnwidth]{fig_confusion_era.png}
+\caption{Confusion matrix of the GP era classifier (thresholded year).
+Errors concentrate on pre-2015 chunks predicted as federal.}
+\label{fig:conf-era}
+\end{figure}
+
 % --------------------------------------------------------------------
 \section{Social, Ethical, Legal and Professional Considerations}
 \label{sec:ethics}
-All texts analysed in this paper are official publications of the
-Government of Nepal and are released into the public domain for
-information and consultation; no copyright restrictions apply to
-research re-use, and we cite each download URL in the released
-sources file.  Nevertheless, several considerations deserve explicit
-discussion.
-
-\emph{Representation.}  Topic models are summaries, not summaries of
-intent.  A topic labelled ``human development'' captures the
-\emph{language} a document uses about that subject, not the
-\emph{adequacy} of the allocations behind it.  Any policy claim built
-on the discovered themes must therefore be triangulated with
-expenditure data.
-
-\emph{Translation bias.}  We use the official English versions of
-each document, which are translations of the authoritative Nepali
-texts.  Translation choices made by government translators can alter
-emphasis, especially around culturally specific terms.  Future work
-should re-run the pipeline on the Nepali originals using a
-Devanagari-aware tokeniser.
-
-\emph{Federalism and provincial voices.}  Our corpus is exclusively
-federal-government.  Provincial and local-government budgets, which
-have grown sharply in importance since 2017, are not represented.
-Generalising the conclusions to ``Nepali policy priorities''
-\textit{tout court} would therefore be premature.
-
-\emph{Professional responsibility.}  Because the GP model returns a
-calibrated posterior probability, deployments of such a tool for
-journalistic or oversight purposes should communicate uncertainty
-rather than headline-grabbing point predictions.  We follow this
-principle throughout the figures.
+All texts analysed are official Government of Nepal publications in
+the public domain; no copyright restricts research re-use, and each
+download URL is recorded in the released sources file.  Four further
+considerations apply.  \emph{Representation:} a topic captures the
+\emph{language} a document uses, not the \emph{adequacy} of the
+allocations behind it, so any policy claim must be triangulated with
+expenditure data.  \emph{Translation bias:} we use the official
+English translations of the Nepali originals, and translator choices
+can shift emphasis; the pipeline should ideally be re-run on the
+Devanagari source with a script-aware tokeniser.  \emph{Provincial
+voices:} the corpus is exclusively federal, so generalising to
+``Nepali policy priorities'' \textit{tout court} would be premature.
+\emph{Professional responsibility:} because the GP returns a
+calibrated posterior, any oversight or journalistic deployment should
+communicate uncertainty rather than headline point predictions, as
+the figures here do.
 
 % --------------------------------------------------------------------
 \section{Discussion and Conclusions}\label{sec:discussion}
@@ -515,12 +533,15 @@ A Mat\'ern-kernel GP regressor further confirms that the corpus has a
 non-trivial temporal signature -- the topics shift in measurable ways
 across the constitutional and federal transitions of 2015--2018.
 
-The GP outperforms the linear baselines on both tasks.  The
-improvement is modest in absolute terms but matters substantively
-because the GP's posterior variance is itself an interpretable
-quantity: passages from years close to the federal transition come
-back with visibly wider posterior intervals, which is exactly the
-behaviour we want from an honest model in a regime change.
+The GP clearly outperforms the linear baselines on the two tasks with
+sharp class structure -- genre classification and year regression --
+but is statistically level with logistic regression once the year is
+thresholded into eras, where the boundary is diffuse.  Reporting this
+null result is deliberate: the value of the GP is not a uniform
+accuracy gain but its calibrated posterior, which widens for passages
+near the 2015 transition -- exactly the behaviour we want from an
+honest model in a regime change, and the same reason the era boundary
+resists a hard decision rule.
 
 \emph{Limitations.}  Three plans and eight speeches are a thin slice
 of Nepal's planning history; extending the corpus to all sixteen
@@ -552,13 +573,13 @@ final results.
 
 % --------------------------------------------------------------------
 \section*{Reproducibility}
-The complete pipeline -- download script, text extractor, analysis
-script, all figures, and the metrics file from which every number in
-this paper was drawn -- is included in the appendix and in the
-project repository (\texttt{policy\_topic\_modeling/}).  Random seeds
-are fixed at $42$; rerunning \verb|uv run python code/01_download.py|
-followed by \verb|02_extract.py| and \verb|03_analyze.py| reproduces
-every result reported above.
+The complete pipeline -- download script, text extractor and analysis
+script -- is listed in Appendix~\ref{app:code} and released at
+\url{https://github.com/aishwaryawambule/policy-topic-modeling}.
+Random seeds are fixed at $42$; running \texttt{01\_download.py},
+\texttt{02\_extract.py} and \texttt{03\_analyze.py} in sequence
+regenerates every figure and the \texttt{metrics.json} from which all
+numbers above are drawn.
 
 % --------------------------------------------------------------------
 \begin{thebibliography}{99}
@@ -612,5 +633,29 @@ Kathmandu: NPC, 2020. [Online].
 \emph{Budget Speech of Fiscal Year 2024/25}.  Kathmandu: MoF, 2024.
 [Online].
 \end{thebibliography}
+
+\onecolumn
+\appendices
+\section{Source Code}\label{app:code}
+The screenshots below show the three Python scripts that implement the pipeline, displayed with headings per script. The complete original text of all code is available in the project repository at \url{https://github.com/aishwaryawambule/policy-topic-modeling}; all random seeds are fixed at 42, so running the scripts in order regenerates every figure, table and number reported above.
+\subsection{\texttt{01\_download.py} --- Data acquisition (downloads the source PDFs)}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/01_download_py_p1.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/01_download_py_p2.png}
+\subsection{\texttt{02\_extract.py} --- PDF $\rightarrow$ plain-text extraction}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/02_extract_py_p1.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/02_extract_py_p2.png}
+\subsection{\texttt{03\_analyze.py} --- Preprocessing, LDA, GP models, era classification and figures}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p1.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p2.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p3.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p4.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p5.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p6.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p7.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p8.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p9.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p10.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p11.png}
+\par\medskip\noindent\includegraphics[width=\linewidth]{code_shots/03_analyze_py_p12.png}
 
 \end{document}
