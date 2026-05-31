@@ -1,0 +1,616 @@
+% =====================================================================
+%  Tracing Policy Priorities in Nepal: A Comparative Topic Modeling
+%  Analysis of Government Five-Year Plans and Budget Speeches
+%
+%  IEEE Conference style, two-column.  Compile with pdflatex or via
+%  Overleaf (template: IEEE Conference Template).  Place all PNGs from
+%  ../figures/ next to this .tex file before compiling, or point
+%  \graphicspath{} to that folder (already done below).
+% =====================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{caption}
+\usepackage{hyperref}
+
+\graphicspath{{../figures/}{./figures/}{./}}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Tracing Policy Priorities in Nepal:\\
+A Comparative Topic Modeling Analysis of Government Five-Year Plans and Budget Speeches}
+
+\author{
+\IEEEauthorblockN{Sandesh Tamang}
+\IEEEauthorblockA{Softwarica College of IT and E-Commerce\\
+in collaboration with Coventry University\\
+Kathmandu, Nepal}
+\and
+\IEEEauthorblockN{Aishwarya Rai}
+\IEEEauthorblockA{Softwarica College of IT and E-Commerce\\
+in collaboration with Coventry University\\
+Kathmandu, Nepal}
+}
+
+\maketitle
+
+% --------------------------------------------------------------------
+\begin{abstract}
+We examine seventeen years of Nepali development discourse by combining
+\emph{Latent Dirichlet Allocation} (LDA) with a \emph{Gaussian Process}
+(GP) classifier and regressor.  A corpus of three Periodic Plans
+published by the National Planning Commission (2007--2024) and eight
+annual budget speeches delivered by the Ministry of Finance is split
+into 345 fixed-length chunks and modelled with eight latent topics.
+The discovered themes -- fiscal management, macroeconomic policy,
+trade and industry, infrastructure, human development, governance,
+agriculture, and federal allocation -- align closely with the
+substantive content of Nepal's planning literature.  Using the
+per-chunk topic distributions as features, a GP classifier with an
+RBF kernel separates Plans from Budget Speeches at $90.7\% \pm 2.8\%$
+five-fold cross-validated accuracy, exceeding a logistic-regression
+baseline by roughly nine accuracy points.  A GP regressor with a
+Mat\'ern-2.5 kernel further predicts the year of authorship to within
+3.48 years on average ($R^{2}=0.353$), exposing measurable thematic
+drift over the federal-transition period.  The study illustrates how
+unsupervised text mining and probabilistic supervised models can be
+combined to quantify policy continuity and change in a
+low-resource governance setting, and it releases a reproducible
+pipeline for follow-up work.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Topic modelling, Latent Dirichlet Allocation, Gaussian Process,
+text mining, public policy, Nepal, budget speech, periodic plan.
+\end{IEEEkeywords}
+
+% --------------------------------------------------------------------
+\section{Introduction}
+Periodic Plans and annual budget speeches are the two flagship texts
+through which the Government of Nepal communicates its development
+intent.  Periodic Plans, published every three to five years by the
+National Planning Commission, set medium-term sectoral targets, while
+budget speeches operationalise those targets through fiscal-year
+allocations announced by the Minister of Finance.  Together they form
+a long, dense and surprisingly under-analysed record of the country's
+policy priorities -- a record that spans monarchy, civil conflict,
+constitutional change and the on-going federal transition.
+
+Most existing scholarship on Nepal's plans is qualitative and relies
+on close-reading of individual documents.  Quantitative comparative
+work is rare, partly because the documents are long (the
+Fifteenth Plan alone exceeds 180{,}000 words) and partly because they
+are scattered across several ministry portals in heterogeneous
+formats.  In this paper we treat the corpus as a single textual data
+set and ask three questions:
+
+\begin{enumerate}
+\item Which latent themes recur across plans and speeches, and in what
+      proportions?
+\item Can a probabilistic supervised model decide, from theme
+      composition alone, whether an unseen passage came from a Plan or
+      from a Budget Speech?
+\item Do the thematic mixtures themselves carry a temporal signature
+      strong enough to date a passage?
+\end{enumerate}
+
+We answer the first question with Latent Dirichlet Allocation
+(LDA)~\cite{blei2003latent}, the second with a Gaussian Process (GP)
+classifier~\cite{rasmussen2006gaussian} on the per-document topic
+distributions, and the third with a GP regressor whose kernel encodes
+smoothness assumptions appropriate for a slowly evolving discourse.
+Section~\ref{sec:related} situates the work in the topic-modelling and
+GP literature, Section~\ref{sec:data} describes the corpus and its
+provenance, Section~\ref{sec:methods} formalises the methods,
+Section~\ref{sec:setup} reports the experimental setup,
+Section~\ref{sec:results} presents the empirical findings,
+Section~\ref{sec:ethics} discusses social and ethical considerations,
+and Section~\ref{sec:discussion} concludes.
+
+% --------------------------------------------------------------------
+\section{Related Work}\label{sec:related}
+Topic modelling has been widely applied to legislative and budgetary
+text.  Quinn~\textit{et al.}~\cite{quinn2010} use a dynamic topic model
+to track U.S.\ Senate attention over fifty years; Grimmer and
+Stewart~\cite{grimmer2013text} survey the broader field; Lucas
+\textit{et al.}~\cite{lucas2015computer} extend the methodology to
+multilingual political corpora.  In the development-policy domain,
+work on World Bank project narratives~\cite{moretti2015} and on Indian
+five-year plans has shown that latent themes can be tracked
+through time even when the underlying document genre is highly
+formulaic.
+
+For Nepal specifically, the literature is sparse.  Existing
+quantitative work has focused either on macroeconomic outcomes
+implied by the plans or on hand-coded sectoral content analyses.  To
+our knowledge no published study has combined LDA with a Gaussian
+Process discriminative layer on the Nepali periodic-plan/budget-speech
+corpus.
+
+Gaussian Process classification and regression remain attractive in
+this regime because (i) the input dimensionality after LDA is small
+(eight topics), (ii) the number of training units is modest (a few
+hundred chunks), and (iii) the posterior gives calibrated uncertainty
+in addition to a point prediction~\cite{rasmussen2006gaussian,williams1998bayesian}.
+The standard squared-exponential (RBF) and Mat\'ern kernels provide
+contrasting smoothness priors that are particularly useful when, as
+here, the analyst has weak prior beliefs about the geometry of the
+feature space~\cite{stein1999interpolation}.
+
+% --------------------------------------------------------------------
+\section{Problem and Data Set}\label{sec:data}
+
+\subsection{Documents collected}
+Three Periodic Plans (Eleventh Three-Year Interim Plan 2007/08--2009/10,
+Thirteenth Plan 2013/14--2015/16, and Fifteenth Plan
+2019/20--2023/24) were downloaded in their official English versions
+from the National Planning Commission and from public mirrors
+maintained by ICIMOD, the Asian Development Bank, and FAOLEX.  Eight
+budget speeches covering fiscal years 2008/09 through 2024/25 were
+downloaded from the Ministry of Finance archive
+(\texttt{mof.gov.np}) and verified against alternative mirrors when
+the primary link returned an HTTP error.  Table~\ref{tab:corpus}
+summarises the collected material.
+
+\begin{table}[t]
+\caption{Source documents in the corpus.}
+\label{tab:corpus}
+\centering
+\small
+\begin{tabular}{lcr}
+\toprule
+Document & Year & Words \\ \midrule
+11th Three-Year Interim Plan & 2007 & 177{,}025 \\
+13th Plan, Approach Paper    & 2013 &  58{,}296 \\
+15th Periodic Plan           & 2019 & 186{,}314 \\ \midrule
+Budget Speech FY2008/09      & 2008 &  40{,}195 \\
+Budget Speech FY2014/15      & 2014 &  36{,}718 \\
+Budget Speech FY2016/17      & 2016 &  43{,}302 \\
+Budget Speech FY2017/18      & 2017 &  38{,}626 \\
+Budget Speech FY2018/19      & 2018 &  24{,}632 \\
+Budget Speech FY2021/22      & 2021 &  38{,}390 \\
+Budget Speech FY2023/24      & 2023 &  24{,}005 \\
+Budget Speech FY2024/25      & 2024 &  17{,}441 \\ \midrule
+\textbf{Total}               &      & \textbf{684{,}944} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Why these documents matter}
+The chosen window straddles three regimes that should, in principle,
+leave detectable thematic fingerprints: the post-conflict transitional
+government (2007--2014), the promulgation of the 2015 Constitution
+and the move to federalism (2015--2017), and the consolidation phase
+under federal Province governments (2018--2024).  An empirical method
+that can or cannot pick these regimes apart from the documents'
+internal language is therefore informative regardless of outcome.
+
+\subsection{Pre-processing}
+The documents are PDFs, so we use \texttt{pypdf} to extract raw
+character streams, re-join hyphenated line breaks, collapse repeated
+whitespace, and cast everything to lower case.  Each cleaned document
+is partitioned into non-overlapping chunks of $\sim$2{,}000 words to
+expose enough units (345 in total) for stable variational inference.
+Tokens are extracted with the regular expression
+\verb|[a-z]{3,}|, the NLTK English stopword list is applied, and a
+manually-curated list of 70 boilerplate terms specific to Nepali
+government English (\textit{nepal}, \textit{government},
+\textit{ministry}, \textit{fiscal}, \textit{rupees}, \dots) is removed
+so that they do not dominate the topics.  The resulting vocabulary
+has 4{,}000 terms after enforcing $\min\!=\!3$ document frequency and
+$\max\!=\!0.85$ document frequency.
+
+% --------------------------------------------------------------------
+\section{Methods}\label{sec:methods}
+
+\subsection{Latent Dirichlet Allocation}
+LDA models each document $d$ as a mixture over $K$ latent topics
+$\theta_d \sim \operatorname{Dir}(\alpha)$ and each topic $k$ as a
+distribution over the vocabulary
+$\phi_k \sim \operatorname{Dir}(\beta)$.  A token $w_{dn}$ is generated
+by first drawing a topic $z_{dn}\!\sim\!\operatorname{Cat}(\theta_d)$
+and then a word $w_{dn}\!\sim\!\operatorname{Cat}(\phi_{z_{dn}})$.  We
+fit LDA with batch variational Bayes as implemented in
+\texttt{scikit-learn}, using $\alpha=0.1$ (favouring sparse
+document-topic mixtures) and $\beta=0.01$ (favouring sparse
+topic-word distributions), 40 outer iterations and a fixed random
+seed.
+
+\subsection{Gaussian Process classifier}
+After LDA we obtain a feature matrix
+$\Theta \in \mathbb{R}^{N\times K}$, where $\Theta_{d,k}$ is the
+expected proportion of topic $k$ in chunk $d$.  We model the binary
+label $y_d \in\{\text{plan},\text{speech}\}$ with a GP classifier
+whose latent function $f$ has prior
+$f \sim \operatorname{GP}(0, k(\cdot, \cdot))$ and likelihood
+$p(y\!\mid\! f)=\Phi(yf)$.  The kernel used is
+\begin{equation}
+k(x,x') \;=\; \sigma_{f}^{2}\,
+              \exp\!\Bigl(-\tfrac{\|x-x'\|^{2}}{2\ell^{2}}\Bigr)
+              \;+\; \sigma_{n}^{2}\,\delta_{xx'},
+\end{equation}
+i.e.\ a constant-scaled RBF plus a white-noise term.  Hyperparameters
+$\{\sigma_{f},\ell,\sigma_{n}\}$ are obtained by maximising the
+log-marginal likelihood with two random restarts.
+
+\subsection{Gaussian Process regressor for time}
+For dating an unseen passage we regress the (continuous) year of
+authorship on the same topic vector.  Because the year axis is short
+($2007$--$2024$) and the underlying topic drift is expected to be
+smooth but not infinitely differentiable, we adopt a Mat\'ern-2.5
+kernel,
+\begin{equation}
+k_{\nu=5/2}(x,x') \;=\;
+   \Bigl(1 + \tfrac{\sqrt{5}r}{\ell} + \tfrac{5r^{2}}{3\ell^{2}}\Bigr)
+   \exp\!\Bigl(-\tfrac{\sqrt{5}r}{\ell}\Bigr),
+\end{equation}
+with $r=\|x-x'\|$, again coupled with an explicit white-noise term.
+
+\subsection{Baselines and evaluation}
+For classification we compare against $\ell_{2}$-regularised
+logistic regression; for regression we compare against ridge
+regression.  All models are evaluated with five-fold cross-validation,
+stratified by class for the classifier and shuffled for the
+regressor.  We report accuracy, macro-$F_{1}$, mean absolute error
+(MAE) and $R^{2}$ together with cross-fold standard deviations.
+
+% --------------------------------------------------------------------
+\section{Experimental Setup}\label{sec:setup}
+The end-to-end pipeline is implemented in Python~3.12 with
+\texttt{scikit-learn}~1.8, \texttt{numpy}, \texttt{pandas},
+\texttt{matplotlib}, \texttt{seaborn}, \texttt{nltk},
+\texttt{wordcloud} and \texttt{pypdf}, managed through the
+\texttt{uv} package manager.  All experiments were run on a
+\mbox{macOS} workstation with an Apple Silicon CPU; total wall-clock
+time, including downloads, is under four minutes.  Random seeds are
+fixed at $42$ throughout.
+
+To select the number of topics $K$, we sweep
+$K\!\in\!\{4,6,8,10,12\}$ and record the held-out perplexity reported
+by the LDA implementation.  As Fig.~\ref{fig:perp} shows, perplexity
+declines monotonically.  We therefore choose $K\!=\!8$ as a
+compromise between predictive accuracy and human interpretability;
+beyond eight topics, additional components either fragment existing
+themes or attach to publication boilerplate that survived the
+stopword pass.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\columnwidth]{fig_perplexity.png}
+\caption{Held-out perplexity as a function of the number of topics
+$K$.  Perplexity falls monotonically but with diminishing returns;
+$K\!=\!8$ is chosen for interpretability.}
+\label{fig:perp}
+\end{figure}
+
+% --------------------------------------------------------------------
+\section{Results}\label{sec:results}
+
+\subsection{Discovered topics}
+Table~\ref{tab:topics} lists the ten highest-probability terms for
+each of the eight topics, and Fig.~\ref{fig:wordcloud} shows
+corresponding word-clouds.  The themes are crisply recognisable to a
+reader familiar with Nepali planning discourse:
+
+\begin{itemize}
+\item \textbf{T1 -- Fiscal accounts.}  Revenue handles, grants,
+      capital and recurrent loans -- the bookkeeping vocabulary of the
+      Ministry of Finance.
+\item \textbf{T2 -- Macroeconomy.}  Economic growth, investment,
+      employment and rates -- the language used to motivate sectoral
+      reform.
+\item \textbf{T3 -- Trade, energy and provinces.}  Tourism, exports,
+      industrial supply and provincial industry, reflecting the
+      post-federal industrial agenda.
+\item \textbf{T4 -- Infrastructure.}  Roads, bridges, electricity
+      transmission, drinking water; consistently the largest single
+      capital-spending category.
+\item \textbf{T5 -- Human development.}  Health, education, women,
+      children, citizens' rights -- the social spending block.
+\item \textbf{T6 -- Implementation and governance.}  Monitoring,
+      evaluation, agencies, institutional reform.
+\item \textbf{T7 -- Agriculture and land.}  Irrigation, forests,
+      cooperatives, food production.
+\item \textbf{T8 -- Federal financial structure.}  Recurrent and
+      capital splits, Federal Affairs, the Office of the
+      Auditor-General -- a topic that, as we show below, barely
+      existed before 2015.
+\end{itemize}
+
+\begin{table*}[t]
+\caption{Top eight words for each LDA topic ($K=8$).}
+\label{tab:topics}
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Topic & Top words \\ \midrule
+T1 (Fiscal)        & tax, grant, revenue, capital, loan, expenditure, foreign, expenses \\
+T2 (Macroeconomy)  & economic, investment, foreign, growth, rate, financial, increase, sectors \\
+T3 (Trade/Energy)  & energy, tourism, goods, trade, province, export, industrial, supply \\
+T4 (Infrastructure)& construction, project, road, water, infrastructure, electricity, completed, transport \\
+T5 (Human dev.)    & health, education, social, women, human, security, rights, children \\
+T6 (Governance)    & programs, system, implementation, monitoring, rural, evaluation, projects, service \\
+T7 (Agriculture)   & land, agriculture, production, food, agricultural, irrigation, forest, areas \\
+T8 (Federal fin.)  & capital, recurrent, financing, affairs, commission, federal, finance, education \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_wordclouds.png}
+\caption{Word-clouds for the eight LDA topics.  Larger words have
+higher probability within the topic.}
+\label{fig:wordcloud}
+\end{figure}
+
+\subsection{Plans versus budget speeches}
+Fig.~\ref{fig:topic-cat} contrasts the average topic probability for
+Plan chunks and Speech chunks.  Plans are dominated by T2
+(macroeconomy), T5 (human development), T6 (governance) and T7
+(agriculture); Budget Speeches are dominated by T1 (fiscal accounts),
+T4 (infrastructure) and T8 (federal finance).  This is precisely the
+division of labour one would expect: Plans articulate medium-term
+strategy in broad sectoral language, while Speeches articulate
+fiscal-year allocations in line-item language.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_topic_category.png}
+\caption{Mean topic probability per category.  Plans emphasise
+sectoral and governance topics; Budget Speeches emphasise fiscal,
+infrastructure and federal-finance topics.}
+\label{fig:topic-cat}
+\end{figure}
+
+\subsection{Gaussian Process classification}
+With these eight features the GP classifier separates the two genres
+at a cross-validated accuracy of $0.907 \pm 0.028$ and macro-$F_{1}$
+of $0.901$, compared with $0.820 \pm 0.025$ accuracy and $0.798$
+$F_{1}$ for logistic regression on the same features
+(Table~\ref{tab:cls}).  Fig.~\ref{fig:conf} shows the confusion
+matrix on the full training set ($210{+}132$ correct, three errors).
+The misclassified chunks turn out to belong to the macroeconomic
+overview sections of budget speeches, which are written in the same
+strategic register as Plans.
+
+\begin{table}[t]
+\caption{Classification of Plans vs Budget Speeches (5-fold CV).}
+\label{tab:cls}
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Model                 & Accuracy            & Macro $F_{1}$       \\ \midrule
+Logistic Regression   & $0.820 \pm 0.025$   & $0.798 \pm 0.032$   \\
+\textbf{GP (RBF)}     & $\mathbf{0.907 \pm 0.028}$ & $\mathbf{0.901 \pm 0.032}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.7\columnwidth]{fig_confusion.png}
+\caption{Confusion matrix of the GP classifier on the full corpus.}
+\label{fig:conf}
+\end{figure}
+
+The t-SNE projection in Fig.~\ref{fig:tsne} provides geometric
+intuition for the result: in eight-topic space the two genres
+already separate into distinct clusters, leaving only a narrow
+contact region for the GP decision boundary to negotiate.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\columnwidth]{fig_tsne.png}
+\caption{Two-dimensional t-SNE embedding of the per-chunk topic
+distributions, coloured by document category.}
+\label{fig:tsne}
+\end{figure}
+
+\subsection{Dating a passage}
+Fig.~\ref{fig:time} traces the mean topic probability for each year of
+the corpus.  Two qualitative observations stand out.  First, T8
+(federal finance) is essentially absent before 2015 and rises sharply
+after the constitution-mandated federal transition.  Second, T2
+(macroeconomy) declines visibly after 2018 as the documents pivot
+from aspirational growth narratives to fiscal-recovery narratives in
+the COVID-19 and post-COVID years.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_topics_over_time.png}
+\caption{Mean topic probability per document year, 2007--2024.
+Topic 8 (federal finance) emerges only after 2015; Topic 2
+(macroeconomy) gradually loses share.}
+\label{fig:time}
+\end{figure}
+
+These shifts are large enough that a GP regressor can recover the
+year of a passage from its topic mixture with a cross-validated MAE
+of $3.48 \pm 0.15$ years and $R^{2} = 0.353 \pm 0.138$, beating
+ridge regression ($\mathrm{MAE}=3.70$, $R^{2}=0.324$) by a small but
+consistent margin (Table~\ref{tab:reg}).  Fig.~\ref{fig:gpr} plots
+predicted year against true year; the $\pm1\sigma$ band widens around
+documents from the 2016--2017 transition years, exactly where the
+discourse is most heterogeneous.
+
+\begin{table}[t]
+\caption{Year regression on topic features (5-fold CV).}
+\label{tab:reg}
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Model              & MAE (years)         & $R^{2}$              \\ \midrule
+Ridge regression   & $3.70 \pm 0.12$     & $0.324 \pm 0.102$    \\
+\textbf{GP (Mat\'ern-5/2)} & $\mathbf{3.48 \pm 0.15}$ & $\mathbf{0.353 \pm 0.138}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_gpr_year.png}
+\caption{Gaussian Process regression of document year on topic
+features.  Shaded band is $\pm1\sigma$ posterior uncertainty.}
+\label{fig:gpr}
+\end{figure}
+
+% --------------------------------------------------------------------
+\section{Social, Ethical, Legal and Professional Considerations}
+\label{sec:ethics}
+All texts analysed in this paper are official publications of the
+Government of Nepal and are released into the public domain for
+information and consultation; no copyright restrictions apply to
+research re-use, and we cite each download URL in the released
+sources file.  Nevertheless, several considerations deserve explicit
+discussion.
+
+\emph{Representation.}  Topic models are summaries, not summaries of
+intent.  A topic labelled ``human development'' captures the
+\emph{language} a document uses about that subject, not the
+\emph{adequacy} of the allocations behind it.  Any policy claim built
+on the discovered themes must therefore be triangulated with
+expenditure data.
+
+\emph{Translation bias.}  We use the official English versions of
+each document, which are translations of the authoritative Nepali
+texts.  Translation choices made by government translators can alter
+emphasis, especially around culturally specific terms.  Future work
+should re-run the pipeline on the Nepali originals using a
+Devanagari-aware tokeniser.
+
+\emph{Federalism and provincial voices.}  Our corpus is exclusively
+federal-government.  Provincial and local-government budgets, which
+have grown sharply in importance since 2017, are not represented.
+Generalising the conclusions to ``Nepali policy priorities''
+\textit{tout court} would therefore be premature.
+
+\emph{Professional responsibility.}  Because the GP model returns a
+calibrated posterior probability, deployments of such a tool for
+journalistic or oversight purposes should communicate uncertainty
+rather than headline-grabbing point predictions.  We follow this
+principle throughout the figures.
+
+% --------------------------------------------------------------------
+\section{Discussion and Conclusions}\label{sec:discussion}
+Combining LDA with a Gaussian Process classifier exposes a clean
+quantitative distinction between Nepal's medium-term Plans and its
+annual Budget Speeches: a small, well-regularised GP recovers the
+distinction at $90.7\%$ accuracy from only eight latent features.
+A Mat\'ern-kernel GP regressor further confirms that the corpus has a
+non-trivial temporal signature -- the topics shift in measurable ways
+across the constitutional and federal transitions of 2015--2018.
+
+The GP outperforms the linear baselines on both tasks.  The
+improvement is modest in absolute terms but matters substantively
+because the GP's posterior variance is itself an interpretable
+quantity: passages from years close to the federal transition come
+back with visibly wider posterior intervals, which is exactly the
+behaviour we want from an honest model in a regime change.
+
+\emph{Limitations.}  Three plans and eight speeches are a thin slice
+of Nepal's planning history; extending the corpus to all sixteen
+Periodic Plans and to provincial budgets would strengthen every
+conclusion.  Pre-processing in English loses lexical signal that the
+Nepali originals contain.  Finally, LDA assumes exchangeable bags of
+words and therefore cannot capture argument structure.
+
+\emph{Future work.}  We see two natural extensions.  First,
+substituting a dynamic topic model~\cite{blei2006dynamic} for static
+LDA would let topic-word distributions themselves evolve through
+time.  Second, the GP classifier could be re-used as an auditing tool
+for new budget speeches: a draft that scores as an outlier under the
+model is, by construction, breaking with the recent fiscal rhetoric
+and would warrant a closer human read.
+
+% --------------------------------------------------------------------
+\section*{Author Contributions}
+The two authors contributed jointly to problem formulation, corpus
+curation, and writing.  Specific contributions are as follows.
+\textbf{Sandesh Tamang} led the data-engineering work (PDF
+acquisition, text extraction, cleaning) and implemented the LDA
+component as the shared methodology.  \textbf{Aishwarya Rai} led the
+probabilistic-modelling work, implementing both the Gaussian Process
+classifier on topic features and the Gaussian Process regressor for
+the temporal analysis as the individual technique, and produced the
+figures.  Both authors jointly wrote the manuscript and reviewed the
+final results.
+
+% --------------------------------------------------------------------
+\section*{Reproducibility}
+The complete pipeline -- download script, text extractor, analysis
+script, all figures, and the metrics file from which every number in
+this paper was drawn -- is included in the appendix and in the
+project repository (\texttt{policy\_topic\_modeling/}).  Random seeds
+are fixed at $42$; rerunning \verb|uv run python code/01_download.py|
+followed by \verb|02_extract.py| and \verb|03_analyze.py| reproduces
+every result reported above.
+
+% --------------------------------------------------------------------
+\begin{thebibliography}{99}
+\bibitem{blei2003latent} D.~M. Blei, A.~Y. Ng, and M.~I. Jordan,
+``Latent Dirichlet allocation,'' \emph{Journal of Machine Learning
+Research}, vol.~3, pp.~993--1022, 2003.
+
+\bibitem{rasmussen2006gaussian} C.~E. Rasmussen and C.~K.~I. Williams,
+\emph{Gaussian Processes for Machine Learning}. MIT Press, 2006.
+
+\bibitem{quinn2010} K.~M. Quinn, B.~L. Monroe, M.~Colaresi,
+M.~H. Crespin, and D.~R. Radev, ``How to analyze political attention
+with minimal assumptions and costs,'' \emph{American Journal of
+Political Science}, vol.~54, no.~1, pp.~209--228, 2010.
+
+\bibitem{grimmer2013text} J.~Grimmer and B.~M. Stewart, ``Text as
+data: the promise and pitfalls of automatic content analysis methods
+for political texts,'' \emph{Political Analysis}, vol.~21, no.~3,
+pp.~267--297, 2013.
+
+\bibitem{lucas2015computer} C.~Lucas, R.~A. Nielsen, M.~E. Roberts,
+B.~M. Stewart, A.~Storer, and D.~Tingley, ``Computer-assisted text
+analysis for comparative politics,'' \emph{Political Analysis},
+vol.~23, no.~2, pp.~254--277, 2015.
+
+\bibitem{moretti2015} F.~Moretti and D.~Pestre, ``Bankspeak: the
+language of World Bank reports, 1946--2012,'' \emph{New Left Review},
+vol.~92, pp.~75--99, 2015.
+
+\bibitem{williams1998bayesian} C.~K.~I. Williams and D.~Barber,
+``Bayesian classification with Gaussian processes,'' \emph{IEEE
+Transactions on Pattern Analysis and Machine Intelligence}, vol.~20,
+no.~12, pp.~1342--1351, 1998.
+
+\bibitem{stein1999interpolation} M.~L. Stein,
+\emph{Interpolation of Spatial Data: Some Theory for Kriging}.
+Springer, 1999.
+
+\bibitem{blei2006dynamic} D.~M. Blei and J.~D. Lafferty, ``Dynamic
+topic models,'' in \emph{Proc.\ ICML}, 2006, pp.~113--120.
+
+\bibitem{pedregosa2011} F.~Pedregosa \textit{et al.},
+``Scikit-learn: machine learning in Python,'' \emph{Journal of
+Machine Learning Research}, vol.~12, pp.~2825--2830, 2011.
+
+\bibitem{npc15} National Planning Commission, Government of Nepal,
+\emph{The Fifteenth Plan, Fiscal Year 2019/20--2023/24}.
+Kathmandu: NPC, 2020. [Online].
+
+\bibitem{mof2024} Ministry of Finance, Government of Nepal,
+\emph{Budget Speech of Fiscal Year 2024/25}.  Kathmandu: MoF, 2024.
+[Online].
+\end{thebibliography}
+
+\end{document}

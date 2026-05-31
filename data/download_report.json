@@ -1,0 +1,92 @@
+[
+  {
+    "category": "plans",
+    "label": "11th_three_year_interim_plan_2007_2010",
+    "ok": true,
+    "msg": "downloaded (1841 KB)"
+  },
+  {
+    "category": "plans",
+    "label": "13th_plan_approach_paper_2013_2016",
+    "ok": true,
+    "msg": "downloaded (1995 KB)"
+  },
+  {
+    "category": "plans",
+    "label": "15th_plan_2019_2024",
+    "ok": true,
+    "msg": "downloaded (4973 KB)"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2008_09",
+    "ok": true,
+    "msg": "downloaded (530 KB)"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2010_11",
+    "ok": false,
+    "msg": "error: HTTPError: HTTP Error 404: Not Found"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2014_15",
+    "ok": true,
+    "msg": "downloaded (562 KB)"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2016_17",
+    "ok": true,
+    "msg": "downloaded (1779 KB)"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2017_18",
+    "ok": true,
+    "msg": "downloaded (1908 KB)"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2018_19",
+    "ok": true,
+    "msg": "downloaded (890 KB)"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2019_20",
+    "ok": false,
+    "msg": "error: RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2020_21",
+    "ok": false,
+    "msg": "error: HTTPError: HTTP Error 404: Not Found"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2021_22",
+    "ok": false,
+    "msg": "error: HTTPError: HTTP Error 404: Not Found"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2021_22_alt",
+    "ok": true,
+    "msg": "downloaded (1079 KB)"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2023_24",
+    "ok": true,
+    "msg": "downloaded (706 KB)"
+  },
+  {
+    "category": "budget_speeches",
+    "label": "budget_2024_25",
+    "ok": true,
+    "msg": "cached (512 KB)"
+  }
+]

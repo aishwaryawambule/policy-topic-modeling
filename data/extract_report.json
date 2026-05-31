@@ -1,0 +1,62 @@
+[
+  {
+    "file": "11th_three_year_interim_plan_2007_2010.pdf",
+    "words": 177025,
+    "out": "data/plans/11th_three_year_interim_plan_2007_2010.txt"
+  },
+  {
+    "file": "13th_plan_approach_paper_2013_2016.pdf",
+    "words": 58296,
+    "out": "data/plans/13th_plan_approach_paper_2013_2016.txt"
+  },
+  {
+    "file": "15th_plan.pdf",
+    "words": 186314,
+    "out": "data/plans/15th_plan.txt"
+  },
+  {
+    "file": "15th_plan_2019_2024.pdf",
+    "words": 186314,
+    "out": "data/plans/15th_plan_2019_2024.txt"
+  },
+  {
+    "file": "budget_2008_09.pdf",
+    "words": 40195,
+    "out": "data/speeches/budget_2008_09.txt"
+  },
+  {
+    "file": "budget_2014_15.pdf",
+    "words": 36718,
+    "out": "data/speeches/budget_2014_15.txt"
+  },
+  {
+    "file": "budget_2016_17.pdf",
+    "words": 43302,
+    "out": "data/speeches/budget_2016_17.txt"
+  },
+  {
+    "file": "budget_2017_18.pdf",
+    "words": 38626,
+    "out": "data/speeches/budget_2017_18.txt"
+  },
+  {
+    "file": "budget_2018_19.pdf",
+    "words": 24632,
+    "out": "data/speeches/budget_2018_19.txt"
+  },
+  {
+    "file": "budget_2021_22_alt.pdf",
+    "words": 38390,
+    "out": "data/speeches/budget_2021_22_alt.txt"
+  },
+  {
+    "file": "budget_2023_24.pdf",
+    "words": 24005,
+    "out": "data/speeches/budget_2023_24.txt"
+  },
+  {
+    "file": "budget_2024_25.pdf",
+    "words": 17441,
+    "out": "data/speeches/budget_2024_25.txt"
+  }
+]

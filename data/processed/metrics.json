@@ -1,0 +1,239 @@
+{
+  "perplexity": [
+    {
+      "k": 4,
+      "perplexity": 1319.8037981795956
+    },
+    {
+      "k": 6,
+      "perplexity": 1264.4994500890548
+    },
+    {
+      "k": 8,
+      "perplexity": 1219.9873440590275
+    },
+    {
+      "k": 10,
+      "perplexity": 1180.02663926167
+    },
+    {
+      "k": 12,
+      "perplexity": 1147.25489240351
+    }
+  ],
+  "chosen_k": 8,
+  "gp_classifier": {
+    "cv_acc_mean": 0.9072463768115941,
+    "cv_acc_std": 0.02839988107574697,
+    "cv_f1_mean": 0.900836846037327,
+    "cv_f1_std": 0.03241960296543085,
+    "train_acc": 0.991304347826087,
+    "confusion": [
+      [
+        210,
+        1
+      ],
+      [
+        2,
+        132
+      ]
+    ],
+    "report": {
+      "0": {
+        "precision": 0.9905660377358491,
+        "recall": 0.995260663507109,
+        "f1-score": 0.9929078014184397,
+        "support": 211.0
+      },
+      "1": {
+        "precision": 0.9924812030075187,
+        "recall": 0.9850746268656716,
+        "f1-score": 0.9887640449438202,
+        "support": 134.0
+      },
+      "accuracy": 0.991304347826087,
+      "macro avg": {
+        "precision": 0.991523620371684,
+        "recall": 0.9901676451863903,
+        "f1-score": 0.9908359231811299,
+        "support": 345.0
+      },
+      "weighted avg": {
+        "precision": 0.991309899029773,
+        "recall": 0.991304347826087,
+        "f1-score": 0.9912983423819208,
+        "support": 345.0
+      }
+    }
+  },
+  "baseline_classifier_lr": {
+    "cv_acc_mean": 0.8202898550724637,
+    "cv_acc_std": 0.025268979382844458,
+    "cv_f1_mean": 0.7978489611164911,
+    "cv_f1_std": 0.031731070315898835
+  },
+  "gp_regressor_year": {
+    "cv_mae_mean": 3.4833474124299784,
+    "cv_mae_std": 0.1523327142818485,
+    "cv_r2_mean": 0.35312293920982174,
+    "cv_r2_std": 0.13828174778239086,
+    "train_mae": 3.0462443959715326,
+    "train_r2": 0.5141051802812052
+  },
+  "baseline_regressor_ridge": {
+    "cv_mae_mean": 3.70352717031081,
+    "cv_mae_std": 0.11881183547745035,
+    "cv_r2_mean": 0.32439801838558335,
+    "cv_r2_std": 0.10182275068221258
+  },
+  "topic_top_words": [
+    [
+      "tax",
+      "grant",
+      "revenue",
+      "capital",
+      "loan",
+      "expenditure",
+      "foreign",
+      "expenses",
+      "recurrent",
+      "service",
+      "interest",
+      "social",
+      "income",
+      "cash",
+      "fee"
+    ],
+    [
+      "economic",
+      "investment",
+      "foreign",
+      "growth",
+      "rate",
+      "financial",
+      "increase",
+      "sectors",
+      "increased",
+      "economy",
+      "policies",
+      "system",
+      "country",
+      "employment",
+      "period"
+    ],
+    [
+      "energy",
+      "tourism",
+      "number",
+      "goods",
+      "trade",
+      "province",
+      "export",
+      "industrial",
+      "result",
+      "supply",
+      "electricity",
+      "information",
+      "thousand",
+      "population",
+      "indicators"
+    ],
+    [
+      "construction",
+      "project",
+      "allocated",
+      "road",
+      "water",
+      "infrastructure",
+      "projects",
+      "electricity",
+      "completed",
+      "transport",
+      "roads",
+      "within",
+      "transmission",
+      "drinking",
+      "cost"
+    ],
+    [
+      "health",
+      "education",
+      "social",
+      "women",
+      "human",
+      "security",
+      "levels",
+      "rights",
+      "children",
+      "system",
+      "policies",
+      "citizens",
+      "employment",
+      "programs",
+      "people"
+    ],
+    [
+      "programs",
+      "system",
+      "implementation",
+      "monitoring",
+      "order",
+      "rural",
+      "effective",
+      "evaluation",
+      "projects",
+      "service",
+      "resources",
+      "information",
+      "agencies",
+      "institutional",
+      "infrastructure"
+    ],
+    [
+      "land",
+      "agriculture",
+      "production",
+      "food",
+      "agricultural",
+      "irrigation",
+      "forest",
+      "use",
+      "based",
+      "areas",
+      "products",
+      "cooperatives",
+      "private",
+      "research",
+      "resources"
+    ],
+    [
+      "capital",
+      "recurrent",
+      "financing",
+      "affairs",
+      "mof",
+      "commission",
+      "general",
+      "education",
+      "federal",
+      "finance",
+      "health",
+      "social",
+      "home",
+      "office",
+      "urban"
+    ]
+  ],
+  "corpus_summary": {
+    "n_chunks": 345,
+    "n_plan_chunks": 211,
+    "n_speech_chunks": 134,
+    "n_source_docs": 11,
+    "n_plan_docs": 3,
+    "n_speech_docs": 8,
+    "vocab_size": 4000,
+    "total_words": 683744,
+    "year_min": 2007,
+    "year_max": 2024
+  }
+}

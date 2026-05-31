@@ -1,0 +1,21 @@
+{
+  "plans": [
+    {"label": "11th_three_year_interim_plan_2007_2010", "url": "https://www.forestaction.org/app/webroot/vendor/tinymce/editor/plugins/filemanager/files/images/stories/pdfs/Po.icy_Doc/Three_year_Interim_Plan_English_Version.pdf"},
+    {"label": "13th_plan_approach_paper_2013_2016", "url": "https://faolex.fao.org/docs/pdf/nep150783.pdf"},
+    {"label": "15th_plan_2019_2024", "url": "https://lpr.adb.org/sites/default/files/resource/630/nepal-fifteenth-national-plan.pdf.pdf"}
+  ],
+  "budget_speeches": [
+    {"label": "budget_2008_09", "url": "https://demo.mof.gov.np/uploads/document/file/Budget%20Speech%202008_20201118042411.pdf"},
+    {"label": "budget_2010_11", "url": "https://www.mof.gov.np/uploads/document/file/Budget%20Speech%202010-1_20201118042106.pdf"},
+    {"label": "budget_2014_15", "url": "https://demo.mof.gov.np/uploads/document/file/20140715244034.pdf"},
+    {"label": "budget_2016_17", "url": "https://old.mof.gov.np/uploads/document/file/20160601173941.pdf"},
+    {"label": "budget_2017_18", "url": "https://old.mof.gov.np/uploads/document/file/20170530191928.pdf"},
+    {"label": "budget_2018_19", "url": "https://old.mof.gov.np/uploads/document/file/Budget_Speech_2018_20201118080436.pdf"},
+    {"label": "budget_2019_20", "url": "https://www.nepalindata.com/media/resources/items/17/bBudget_Speech_2019_20_English.pdf"},
+    {"label": "budget_2020_21", "url": "https://nepalindata.com/media/resources/items/0/bBudget_Speech2077-78_Eng.pdf"},
+    {"label": "budget_2021_22", "url": "https://www.mof.gov.np/uploads/document/file/1627455031_Budget_speech_2021.pdf"},
+    {"label": "budget_2021_22_alt", "url": "https://policy.asiapacificenergy.org/sites/default/files/Budget%20Speech%202021-22_0.pdf"},
+    {"label": "budget_2023_24", "url": "https://demo.mof.gov.np/uploads/document/file/1688901593_TC%20-%20EDIT%20-%20FY2023_24%20Budget%20Speech_R2.pdf"},
+    {"label": "budget_2024_25", "url": "https://demo.mof.gov.np/uploads/document/file/1724825318_Budget%20Speech%202024_25%20English%20FV.pdf"}
+  ]
+}
